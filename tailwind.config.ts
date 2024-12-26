@@ -21,7 +21,7 @@ export default {
       colors: {
         canvas: {
           bg: "#ffffff",
-          dot: "#e5e7eb",
+          dot: "#000000",
           note: "#ffffff",
         },
         border: "hsl(var(--border))",
