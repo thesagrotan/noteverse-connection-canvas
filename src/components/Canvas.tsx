@@ -3,12 +3,15 @@ import { useState, useEffect } from "react";
 import Note from "./Note";
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 export interface NoteData {
   id: string;
   x: number;
   y: number;
   content: string;
+  type: "text" | "image";
+  imageUrl?: string;
 }
 
 const Canvas = () => {
@@ -43,6 +46,7 @@ const Canvas = () => {
       x: -x.get() + window.innerWidth / 2 - 100,
       y: -y.get() + window.innerHeight / 2 - 50,
       content: "New note",
+      type: "text"
     };
     setNotes([...notes, newNote]);
   };
@@ -55,6 +59,72 @@ const Canvas = () => {
     );
   };
 
+  const handlePaste = async (e: ClipboardEvent) => {
+    e.preventDefault();
+    const items = e.clipboardData?.items;
+    
+    if (!items) return;
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        try {
+          const imageUrl = URL.createObjectURL(file);
+          const newNote: NoteData = {
+            id: `note-${Date.now()}`,
+            x: -x.get() + window.innerWidth / 2 - 100,
+            y: -y.get() + window.innerHeight / 2 - 50,
+            content: "",
+            type: "image",
+            imageUrl
+          };
+          setNotes([...notes, newNote]);
+          toast("Image added to canvas!");
+        } catch (error) {
+          toast("Failed to add image", { description: "Please try again" });
+        }
+      }
+    }
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    const items = e.dataTransfer?.items;
+    
+    if (!items) return;
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        const imageUrl = URL.createObjectURL(file);
+        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        const newNote: NoteData = {
+          id: `note-${Date.now()}`,
+          x: e.clientX - rect.left - 100,
+          y: e.clientY - rect.top - 50,
+          content: "",
+          type: "image",
+          imageUrl
+        };
+        setNotes([...notes, newNote]);
+        toast("Image added to canvas!");
+      }
+    }
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [notes, x, y]);
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-canvas-bg relative">
       <div className="absolute top-4 right-4 z-50">
@@ -62,7 +132,11 @@ const Canvas = () => {
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      <div className="canvas-container w-full h-full">
+      <div 
+        className="canvas-container w-full h-full"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <motion.div
           className="w-full h-full cursor-grab active:cursor-grabbing relative"
           style={{
