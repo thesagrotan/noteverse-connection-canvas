@@ -89,7 +89,7 @@ const Canvas = () => {
     }
   };
 
-  const handleDrop = (e: DragEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const items = e.dataTransfer?.items;
     
@@ -101,7 +101,7 @@ const Canvas = () => {
         if (!file) continue;
 
         const imageUrl = URL.createObjectURL(file);
-        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const newNote: NoteData = {
           id: `note-${Date.now()}`,
           x: e.clientX - rect.left - 100,
@@ -116,7 +116,7 @@ const Canvas = () => {
     }
   };
 
-  const handleDragOver = (e: DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
 
